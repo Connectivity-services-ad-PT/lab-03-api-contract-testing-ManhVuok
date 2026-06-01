@@ -1,0 +1,14 @@
+
+> fit4110_lab03_postman_mock_testing@0.3.0 lint:contracts
+> spectral lint contracts/*.yaml --fail-severity error
+
+(node:6845) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+/home/ubuntu/lab-03-api-contract-testing-ManhVuok/contracts/ai-vision.openapi.yaml
+ 2:6  warning  info-contact  Info object must have "contact" object.  info
+
+/home/ubuntu/lab-03-api-contract-testing-ManhVuok/contracts/iot-ingestion.openapi.yaml
+ 2:6  warning  info-contact  Info object must have "contact" object.  info
+
+✖ 2 problems (0 errors, 2 warnings, 0 infos, 0 hints)
