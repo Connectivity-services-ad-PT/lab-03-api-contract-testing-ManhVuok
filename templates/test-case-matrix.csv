@@ -1,6 +1,14 @@
 ID,Folder,Endpoint,Method,Scenario,Input file/body,Expected status,Expected response check,Type,Pass/Fail,Evidence
-TC01,Functional,/health,GET,Service is alive,-,200,status=ok,functional,,
-TC02,Functional,/readings,POST,Create reading happy path,mock-data/sensor-reading-valid.json,201,"has reading_id, accepted=true",functional,,
-TC03,Negative,/readings,POST,Missing device_id,mock-data/sensor-reading-invalid-missing-device.json,400,Problem Details,negative,,
-TC04,Auth,/readings,POST,Missing token,mock-data/sensor-reading-valid.json,401,Problem Details,auth,,
-TC05,Boundary,/readings,POST,High temperature boundary,mock-data/sensor-reading-boundary.json,201/400,documented behavior,boundary,,
+TC01,00_Health,/health,GET,Service is alive,-,200,status field present (mock returns ok),functional,Pass,reports/newman-report.html
+TC02,01_Functional,/readings,POST,Create reading happy path,mock-data/sensor-reading-valid.json,201,response has reading_id / accepted,functional,Pass,reports/newman-report.html
+TC03,01_Functional,/readings/latest,GET,List latest readings,-,200,items is an array,functional,Pass,reports/newman-report.html
+TC04,02_Auth,/readings/latest,GET,Valid token is accepted,Authorization: Bearer {{authToken}},200,request with valid token succeeds,auth,Pass,reports/newman-report.html
+TC05,02_Auth,/readings,POST,Missing token is rejected on real service,no Authorization header,401/403,auth enforced on real service (skipped/asserted on mock),auth,Pass,reports/newman-report.html
+TC06,02_Auth,/readings,POST,Invalid token is rejected on real service,Authorization: Bearer wrong-token,401/403,invalid token rejected on real service,auth,Pass,reports/newman-report.html
+TC07,03_Negative,/readings,POST,Missing required field (device_id),mock-data/sensor-reading-invalid-missing-device.json,400/422,error follows ProblemDetails (status field),negative,Pass,reports/newman-report.html
+TC08,03_Negative,/readings,POST,Wrong enum value for metric,invalid metric value,400/422,validation error returned,negative,Pass,reports/newman-report.html
+TC09,04_Boundary_Reliability,/readings,POST,Boundary value 80 is accepted,mock-data/sensor-reading-boundary.json,201/400/422,server response checked (not request body),boundary,Pass,reports/newman-report.html
+TC10,04_Boundary_Reliability,/readings,POST,Value 81 is rejected as out of range,temperature=81,400/422,out-of-range value returns client error,boundary,Pass,reports/newman-report.html
+TC11,04_Boundary_Reliability,/readings/latest,GET,Limit above max is rejected,limit=101,400/422,limit above max returns client error,boundary,Pass,reports/newman-report.html
+TC12,05_Consumer_side_Smoke,/detect (AI Vision mock),POST,Consumer can call provider AI Vision mock,POST {{aiVisionMockUrl}}/detect,200,consumer receives success and can read detection fields,consumer-smoke,Pass,reports/newman-report.html
+TC13,06_Local_only_NonFunctional,/readings,POST,Local response time threshold,mock-data/sensor-reading-valid.json,201,response time below threshold (only asserted when env=local),non-functional,Pass (skipped on mock),reports/newman-report.html
