@@ -5,7 +5,7 @@
 Service: **team-iot — IoT Ingestion**
 Contract: `contracts/iot-ingestion.openapi.yaml`
 Collection: `postman/collections/FIT4110_lab03_iot_ingestion.postman_collection.json`
-Evidence: `reports/newman-report.html`, `reports/newman-report-mock.xml` (13 requests / 21 assertions, 0 failed)
+Evidence: `reports/newman-report.html`, `reports/newman-report.xml`, `reports/contract-lint-report.txt` (13 requests / 21 assertions, 0 failed; lint 0 errors)
 
 ## 1. Functional tests
 
@@ -48,6 +48,6 @@ Evidence: `reports/newman-report.html`, `reports/newman-report-mock.xml` (13 req
 - [x] Collection export JSON. (postman/collections/FIT4110_lab03_iot_ingestion.postman_collection.json)
 - [x] Environment mock export JSON. (postman/environments/FIT4110_lab03_mock.postman_environment.json)
 - [x] Environment local export JSON. (postman/environments/FIT4110_lab03_local.postman_environment.json)
-- [x] Newman report XML/HTML. (reports/newman-report-mock.xml, reports/newman-report.html)
+- [x] Newman report XML/HTML. (reports/newman-report.xml, reports/newman-report.html, + reports/contract-lint-report.txt)
 - [x] Test-case matrix đã điền. (templates/test-case-matrix.csv)
 - [x] Biên bản handshake đã điền. (templates/consumer-provider-handshake.md)
