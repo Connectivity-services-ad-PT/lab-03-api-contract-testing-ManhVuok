@@ -1,0 +1,617 @@
+{
+  "info": {
+    "_postman_id": "fit4110-lab03-access-gate",
+    "name": "FIT4110 Lab03 - Access Gate Contract Tests",
+    "description": "Postman Collection cho team-gate (Access Gate). Cau truc folder bam theo bai giang: Functional, Auth, Negative, Boundary/Reliability, Consumer-side va Local-only. Provider: Access Gate (mock :4010). Consumer-side smoke goi mock cua Core Business (:4011). Khong hardcode baseUrl/authToken - tat ca lay tu environment.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const prefix = pm.environment.get('tracePrefix') || 'fit4110-lab03';",
+          "pm.variables.set('traceId', prefix + '-' + Date.now());",
+          "pm.request.headers.upsert({ key: 'X-Trace-Id', value: pm.variables.get('traceId') });"
+        ]
+      }
+    }
+  ],
+  "variable": [],
+  "item": [
+    {
+      "name": "00_Health",
+      "item": [
+        {
+          "name": "GET /health - service is alive",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "description": "Health check khong yeu cau auth."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response reports service status', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('status', 'ok');",
+                  "  pm.expect(json).to.have.property('service');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01_Functional",
+      "item": [
+        {
+          "name": "GET /access/logs/recent - list recent access logs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/recent?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "recent"],
+              "query": [{ "key": "limit", "value": "20" }]
+            },
+            "description": "Happy path: Core Business doc log quet the gan day. Kiem tra response co paginated shape dung contract."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is a paginated access-log page', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('items');",
+                  "  pm.expect(json.items).to.be.an('array');",
+                  "  pm.expect(json).to.have.property('hasMore');",
+                  "  pm.expect(json).to.have.property('nextCursor');",
+                  "});",
+                  "pm.test('Each access log has the contract fields', function () {",
+                  "  const items = pm.response.json().items;",
+                  "  if (items.length > 0) {",
+                  "    const log = items[0];",
+                  "    ['logId','cardId','gateId','direction','status','timestamp'].forEach(function (f) {",
+                  "      pm.expect(log).to.have.property(f);",
+                  "    });",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /cards/{cardId} - read card info",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/cards/RFID-2026-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["cards", "RFID-2026-001"]
+            },
+            "description": "Tra cuu thong tin the RFID hop le."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Card info matches contract enums', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('cardId');",
+                  "  pm.expect(['STUDENT','LECTURER','STAFF','VISITOR']).to.include(json.holderType);",
+                  "  pm.expect(['ACTIVE','SUSPENDED','EXPIRED','REVOKED']).to.include(json.status);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /gates/{gateId}/status - read gate status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/gates/GATE-01/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["gates", "GATE-01", "status"]
+            },
+            "description": "Kiem tra trang thai cong hop le."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Gate status has valid mode and online flag', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('gateId');",
+                  "  pm.expect(['NORMAL','LOCKDOWN','MAINTENANCE','EMERGENCY_OPEN']).to.include(json.mode);",
+                  "  pm.expect(json.isOnline).to.be.a('boolean');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /events - valid card-swipe event is accepted",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "description": "Gui su kien quet the hop le (GATE_SCAN).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"GATE_SCAN\",\n  \"gateId\": \"GATE-01\",\n  \"cardId\": \"RFID-2026-001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Response returns an eventId', function () {",
+                  "  pm.expect(pm.response.json()).to.have.property('eventId');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02_Auth",
+      "item": [
+        {
+          "name": "GET /access/logs/recent - valid token is accepted",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/recent?limit=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "recent"],
+              "query": [{ "key": "limit", "value": "1" }]
+            },
+            "description": "Token hop le -> 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Valid token request returns success', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /access/logs/recent - missing token is rejected",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/recent?limit=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "recent"],
+              "query": [{ "key": "limit", "value": "1" }]
+            },
+            "description": "Auth test that: KHONG gui token. Prism enforce security cua contract nen tra 401; service that cung phai tu choi."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing token returns 401 or 403', function () {",
+                  "  pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Error body follows Problem shape', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('title');",
+                  "  pm.expect(json).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /events - missing token is rejected",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "description": "Auth test that cho write endpoint: khong gui token -> 401/403.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"GATE_SCAN\",\n  \"gateId\": \"GATE-01\",\n  \"cardId\": \"RFID-2026-001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Missing token returns 401 or 403', function () {",
+                  "  pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /cards/{cardId} - invalid token is rejected on real service",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer invalid-token" }],
+            "url": {
+              "raw": "{{baseUrl}}/cards/RFID-2026-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["cards", "RFID-2026-001"]
+            },
+            "description": "Token sai gia tri. Prism chi kiem tra co Bearer token hay khong (khong validate gia tri), nen test nay chi co y nghia tren service that -> skip co kiem soat tren mock."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const env = pm.environment.get('env') || 'mock';",
+                  "if (env === 'mock') {",
+                  "  pm.test('Skipped on mock: Prism does not validate token value, only presence', function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Invalid token returns 401 or 403', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03_Negative",
+      "item": [
+        {
+          "name": "GET /gates/{gateId}/status - invalid gateId format returns validation error",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/gates/BADGATE/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["gates", "BADGATE", "status"]
+            },
+            "description": "gateId sai pattern (^GATE-[0-9]{2}$). Prism validate request va tra 422; service that tra 400/422. Khong dung Prefer."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid gateId returns client error', function () {",
+                  "  pm.expect([400, 422]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Error response has title and status', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('title');",
+                  "  pm.expect(json).to.have.property('status');",
+                  "  pm.expect(json.status).to.be.within(400, 599);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /events - missing required field returns validation error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "description": "Thieu cardId trong GateEvent. Prism validate body theo contract va tra loi 4xx (khong can Prefer).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"GATE_SCAN\",\n  \"gateId\": \"GATE-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Invalid payload returns client error', function () {",
+                  "  pm.expect([400, 422]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Error response follows Problem shape', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('title');",
+                  "  pm.expect(json).to.have.property('status');",
+                  "  pm.expect(json.status).to.be.within(400, 599);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /cards/{cardId} - card not found returns 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Prefer", "value": "code=404" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cards/RFID-9999-999",
+              "host": ["{{baseUrl}}"],
+              "path": ["cards", "RFID-9999-999"]
+            },
+            "description": "The dung pattern nhung khong ton tai. Prism khong co DB nen dung Prefer: code=404 de chon response 404 da khai bao trong contract; service that tu tra 404 khi tra cuu khong thay."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Unknown card returns 404', function () {",
+                  "  pm.expect(pm.response.code).to.eql(404);",
+                  "});",
+                  "pm.test('404 body follows Problem shape', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('title');",
+                  "  pm.expect(json).to.have.property('status', 404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04_Boundary_Reliability",
+      "item": [
+        {
+          "name": "GET /access/logs/recent - limit at max (100) is accepted",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/recent?limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "recent"],
+              "query": [{ "key": "limit", "value": "100" }]
+            },
+            "description": "Boundary: limit = max hop le (100) -> 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Boundary limit=100 returns success', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test('Response is still a valid page', function () {",
+                  "  pm.expect(pm.response.json()).to.have.property('items');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /access/logs/recent - limit above max (101) is rejected",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/recent?limit=101",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "recent"],
+              "query": [{ "key": "limit", "value": "101" }]
+            },
+            "description": "Boundary: limit vuot max (>100). Prism validate query va tra 422. Kiem tra response, khong kiem lai request."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('limit above max returns client error', function () {",
+                  "  pm.expect([400, 422]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /access/logs/{logId} - status reflects allow/deny decision",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/access/logs/0196fb3d-4ad7-7d1e-9f49-5d5148d2babc",
+              "host": ["{{baseUrl}}"],
+              "path": ["access", "logs", "0196fb3d-4ad7-7d1e-9f49-5d5148d2babc"]
+            },
+            "description": "Reliability/allow-deny: log quet the phai co status thuoc {ALLOWED, DENIED}."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Decision is ALLOWED or DENIED', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(['ALLOWED','DENIED']).to.include(json.status);",
+                  "  pm.expect(['IN','OUT']).to.include(json.direction);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05_Consumer_side_Smoke",
+      "item": [
+        {
+          "name": "Consumer smoke - Access Gate calls Core Business mock (evaluate-access)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{coreMockUrl}}/policies/evaluate-access",
+              "host": ["{{coreMockUrl}}"],
+              "path": ["policies", "evaluate-access"]
+            },
+            "description": "Consumer-side smoke: Access Gate (consumer) goi mock cua Core Business (provider) de xin quyet dinh allow/deny cho mot lan quet the. Goi mock cua service phu thuoc, khong goi lai API cua chinh minh.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cardId\": \"RFID-2026-001\",\n  \"gateId\": \"GATE-01\",\n  \"direction\": \"IN\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Consumer receives success from provider mock', function () {",
+                  "  pm.expect(pm.response.code).to.eql(200);",
+                  "});",
+                  "pm.test('Consumer can read the policy decision fields', function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(['ALLOW','DENY']).to.include(json.decision);",
+                  "  pm.expect(json).to.have.property('policyId');",
+                  "  pm.expect(json).to.have.property('reason');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06_Local_only_NonFunctional",
+      "item": [
+        {
+          "name": "POST /events - local response time threshold",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+            "description": "Latency/SLA chi co y nghia khi chay service that, nen chi assert tren env=local.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventType\": \"GATE_SCAN\",\n  \"gateId\": \"GATE-02\",\n  \"cardId\": \"RFID-2026-002\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const env = pm.environment.get('env') || 'mock';",
+                  "if (env === 'local') {",
+                  "  pm.test('Local service responds under 1000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "  });",
+                  "} else {",
+                  "  pm.test('Skipped on mock: mock latency is not evidence of real service reliability', function () {",
+                  "    pm.expect(true).to.eql(true);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

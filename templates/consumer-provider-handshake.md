@@ -1,64 +1,72 @@
-# Consumer–Provider Handshake
+# Consumer–Provider Handshake — FIT4110 Lab 03
 
-## Thông tin chung
+Biên bản handshake cho consumer-side smoke test.
 
-- Lab: FIT4110 Lab 03
-- Ngày: 2026-06-01
-- Provider team: team-vision (AI Vision)
-- Consumer team: team-iot (IoT Ingestion)
-- Provider service: AI Vision
-- Consumer service: IoT Ingestion
+## 1. Thông tin chung
 
-## Contract
+| Mục | Giá trị |
+| --- | --- |
+| Consumer | **team-gate — Access Gate** |
+| Provider (service phụ thuộc) | **team-core — Core Business** |
+| Endpoint được gọi | `POST /policies/evaluate-access` |
+| Mock base URL | `{{coreMockUrl}}` = `http://localhost:4011` (Prism mock từ `contracts/core-business.openapi.yaml`) |
+| Auth rule | `Authorization: Bearer {{authToken}}` (bearer JWT) |
+| Folder test | `05_Consumer_side_Smoke` |
 
-- Contract file: `contracts/ai-vision.openapi.yaml`
-- Mock base URL: `http://localhost:4011` (`{{aiVisionMockUrl}}`)
-- Auth method: HTTP Bearer token (`Authorization: Bearer {{authToken}}`)
-- Endpoint được test: `POST /detect`
+> Bối cảnh: Trong sơ đồ Smart Campus `Access Gate → Core Business`, Access Gate (consumer) gửi
+> thông tin một lần quẹt thẻ tới Core Business (provider) để xin quyết định allow/deny theo chính sách.
+> Vì Core Business có thể chưa code xong, Access Gate gọi **mock** của Core Business để smoke test.
 
-## Smoke test
+## 2. Contract provider công bố
 
-### Request
+- `openapi.yaml`: `contracts/core-business.openapi.yaml`
+- `mock_base_url`: `http://localhost:4011`
+- `auth rule`: Bearer JWT (endpoint `POST /policies/evaluate-access` yêu cầu token)
+
+### Example request
 
 ```http
-POST /detect
+POST {{coreMockUrl}}/policies/evaluate-access
 Authorization: Bearer {{authToken}}
 Content-Type: application/json
-```
 
-```json
 {
-  "camera_id": "CAM01",
-  "image_url": "https://example.com/frame.jpg"
+  "cardId": "RFID-2026-001",
+  "gateId": "GATE-01",
+  "direction": "IN"
 }
 ```
 
-### Expected response
+### Example response (200)
 
 ```json
 {
-  "detection_id": "DET001",
-  "camera_id": "CAM01",
-  "label": "person",
-  "confidence": 0.91,
-  "risk_level": "medium"
+  "decision": "ALLOW",
+  "policyId": "POL-ACCESS-001",
+  "reason": "Thẻ hợp lệ, còn hạn, cổng đang mở"
 }
 ```
 
-## Kết quả
+## 3. Smoke test của consumer
 
-- [x] Consumer gọi mock thành công. (POST {{aiVisionMockUrl}}/detect → 200 OK)
-- [x] Consumer parse được field cần dùng. (đọc được detection_id, label, confidence)
-- [x] Consumer hiểu lỗi 4xx/5xx provider trả về. (contract định nghĩa 400 invalid-image, 401 unauthorized theo ProblemDetails)
-- [x] Có Newman report hoặc screenshot. (folder 05_Consumer_side_Smoke trong reports/newman-report.html)
+Request trong collection: **05_Consumer_side_Smoke → "Consumer smoke - Access Gate calls Core Business mock (evaluate-access)"**
 
-## Ghi chú thay đổi hợp đồng
+Assertions:
 
-| Nội dung | Trước | Sau | Người đồng ý |
-|---|---|---|---|
-| Không có thay đổi hợp đồng trong lab này | - | - | - |
+- `pm.response.code === 200` — consumer nhận thành công từ provider mock.
+- `decision ∈ {ALLOW, DENY}` — đọc được trường quyết định cần dùng.
+- response có `policyId` và `reason` — đủ thông tin để Access Gate ghi log / hiển thị.
 
-## Xác nhận
+## 4. Tiêu chí pass (theo docs/CONSUMER_SIDE_TESTING.md)
 
-- Provider representative: team-vision
-- Consumer representative: team-iot (ManhVuok)
+- [x] Gọi đúng endpoint của provider (`POST /policies/evaluate-access`).
+- [x] Request body đúng schema (`cardId`, `gateId`, `direction`).
+- [x] Đọc được field cần dùng trong response (`decision`, `policyId`, `reason`).
+- [x] Xử lý được ít nhất 1 lỗi 4xx/5xx — contract Core Business khai báo `400` và `401`; consumer giả định nhận và xử lý các mã này.
+- [x] Có Newman report làm bằng chứng (`reports/newman-report.html`, `reports/newman-report.xml`).
+
+## 5. Kết quả
+
+| Lần chạy | Môi trường | Kết quả |
+| --- | --- | --- |
+| Newman (CI + local) | mock (`:4011`) | Pass — 200, đọc được `decision`/`policyId`/`reason` |

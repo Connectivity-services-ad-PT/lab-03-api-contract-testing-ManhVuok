@@ -1,14 +1,17 @@
+FIT4110 Lab 03 - Spectral contract lint report
+Team: team-gate (Access Gate)
+Command: npm run lint:contracts  (spectral lint contracts/*.yaml --fail-severity error)
+Generated: 2026-06-02T03:00:15Z
+Spectral CLI: 6.16.0
+----------------------------------------------------------------
 
-> fit4110_lab03_postman_mock_testing@0.3.0 lint:contracts
-> spectral lint contracts/*.yaml --fail-severity error
+contracts/access-gate.openapi.yaml
+ 550:15  warning  oas3-unused-component  Potentially unused component has been detected.  components.responses.Forbidden
+ 571:14  warning  oas3-unused-component  Potentially unused component has been detected.  components.responses.Conflict
+ 578:25  warning  oas3-unused-component  Potentially unused component has been detected.  components.responses.UnprocessableEntity
 
-(node:6845) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-
-/home/ubuntu/lab-03-api-contract-testing-ManhVuok/contracts/ai-vision.openapi.yaml
- 2:6  warning  info-contact  Info object must have "contact" object.  info
-
-/home/ubuntu/lab-03-api-contract-testing-ManhVuok/contracts/iot-ingestion.openapi.yaml
- 2:6  warning  info-contact  Info object must have "contact" object.  info
-
-✖ 2 problems (0 errors, 2 warnings, 0 infos, 0 hints)
+✖ 3 problems (0 errors, 3 warnings, 0 infos, 0 hints)
+----------------------------------------------------------------
+Ket qua: 0 errors. Warning con lai khong chan (fail-severity=error):
+ - oas3-unused-component (Forbidden/Conflict/UnprocessableEntity): cac response duoc khai bao san trong contract Lab 02 nhung chua endpoint nao tham chieu - giu nguyen theo contract goc.
+Ghi chu: rule 'duplicated-entry-in-enum' bi tat trong .spectral.yaml do bug nimma crash tren gia tri null (OpenAPI 3.1) - xem comment trong .spectral.yaml.

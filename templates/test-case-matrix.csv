@@ -1,14 +1,18 @@
 ID,Folder,Endpoint,Method,Scenario,Input file/body,Expected status,Expected response check,Type,Pass/Fail,Evidence
-TC01,00_Health,/health,GET,Service is alive,-,200,status field present (mock returns ok),functional,Pass,reports/newman-report.html
-TC02,01_Functional,/readings,POST,Create reading happy path,mock-data/sensor-reading-valid.json,201,response has reading_id / accepted,functional,Pass,reports/newman-report.html
-TC03,01_Functional,/readings/latest,GET,List latest readings,-,200,items is an array,functional,Pass,reports/newman-report.html
-TC04,02_Auth,/readings/latest,GET,Valid token is accepted,Authorization: Bearer {{authToken}},200,request with valid token succeeds,auth,Pass,reports/newman-report.html
-TC05,02_Auth,/readings,POST,Missing token is rejected on real service,no Authorization header,401/403,auth enforced on real service (skipped/asserted on mock),auth,Pass,reports/newman-report.html
-TC06,02_Auth,/readings,POST,Invalid token is rejected on real service,Authorization: Bearer wrong-token,401/403,invalid token rejected on real service,auth,Pass,reports/newman-report.html
-TC07,03_Negative,/readings,POST,Missing required field (device_id),mock-data/sensor-reading-invalid-missing-device.json,400/422,error follows ProblemDetails (status field),negative,Pass,reports/newman-report.html
-TC08,03_Negative,/readings,POST,Wrong enum value for metric,invalid metric value,400/422,validation error returned,negative,Pass,reports/newman-report.html
-TC09,04_Boundary_Reliability,/readings,POST,Boundary value 80 is accepted,mock-data/sensor-reading-boundary.json,201/400/422,server response checked (not request body),boundary,Pass,reports/newman-report.html
-TC10,04_Boundary_Reliability,/readings,POST,Value 81 is rejected as out of range,temperature=81,400/422,out-of-range value returns client error,boundary,Pass,reports/newman-report.html
-TC11,04_Boundary_Reliability,/readings/latest,GET,Limit above max is rejected,limit=101,400/422,limit above max returns client error,boundary,Pass,reports/newman-report.html
-TC12,05_Consumer_side_Smoke,/detect (AI Vision mock),POST,Consumer can call provider AI Vision mock,POST {{aiVisionMockUrl}}/detect,200,consumer receives success and can read detection fields,consumer-smoke,Pass,reports/newman-report.html
-TC13,06_Local_only_NonFunctional,/readings,POST,Local response time threshold,mock-data/sensor-reading-valid.json,201,response time below threshold (only asserted when env=local),non-functional,Pass (skipped on mock),reports/newman-report.html
+TC01,00_Health,/health,GET,Service is alive,no auth,200,status=ok and service present,functional,Pass,reports/newman-report.html
+TC02,01_Functional,/access/logs/recent,GET,List recent access logs (happy path),limit=20 + Bearer {{authToken}},200,items is array; hasMore/nextCursor present; items[].logId/cardId/gateId/direction/status/timestamp,functional,Pass,reports/newman-report.html
+TC03,01_Functional,/cards/{cardId},GET,Read valid card info,cardId=RFID-2026-001,200,holderType in [STUDENT/LECTURER/STAFF/VISITOR]; status in [ACTIVE/SUSPENDED/EXPIRED/REVOKED],functional,Pass,reports/newman-report.html
+TC04,01_Functional,/gates/{gateId}/status,GET,Read valid gate status,gateId=GATE-01,200,mode in [NORMAL/LOCKDOWN/MAINTENANCE/EMERGENCY_OPEN]; isOnline is boolean,functional,Pass,reports/newman-report.html
+TC05,01_Functional,/events,POST,Valid card-swipe event accepted,GATE_SCAN gateId=GATE-01 cardId=RFID-2026-001,201,response has eventId,functional,Pass,reports/newman-report.html
+TC06,02_Auth,/access/logs/recent,GET,Valid token is accepted,Bearer {{authToken}},200,request with valid token succeeds,auth,Pass,reports/newman-report.html
+TC07,02_Auth,/access/logs/recent,GET,Missing token is rejected,no Authorization header,401/403,Problem shape has title/status (Prism enforces security),auth,Pass,reports/newman-report.html
+TC08,02_Auth,/events,POST,Missing token is rejected (write),no Authorization header + valid body,401/403,request rejected without token,auth,Pass,reports/newman-report.html
+TC09,02_Auth,/cards/{cardId},GET,Invalid token rejected on real service,Bearer invalid-token,401/403,skipped on mock (Prism only checks presence); asserted on local,auth,Pass,reports/newman-report.html
+TC10,03_Negative,/gates/{gateId}/status,GET,Invalid gateId format,gateId=BADGATE,400/422,error body has title/status within 400-599,negative,Pass,reports/newman-report.html
+TC11,03_Negative,/events,POST,Missing required field,GATE_SCAN missing cardId,400/422,Problem shape has title/status within 400-599,negative,Pass,reports/newman-report.html
+TC12,03_Negative,/cards/{cardId},GET,Card not found,cardId=RFID-9999-999 + Prefer code=404,404,Problem shape has title and status=404,negative,Pass,reports/newman-report.html
+TC13,04_Boundary_Reliability,/access/logs/recent,GET,Limit at max accepted,limit=100,200,response still a valid page (items present),boundary,Pass,reports/newman-report.html
+TC14,04_Boundary_Reliability,/access/logs/recent,GET,Limit above max rejected,limit=101,400/422,client error returned (checks response not request),boundary,Pass,reports/newman-report.html
+TC15,04_Boundary_Reliability,/access/logs/{logId},GET,Decision reflects allow/deny,logId=0196fb3d-4ad7-7d1e-9f49-5d5148d2babc,200,status in [ALLOWED/DENIED]; direction in [IN/OUT],reliability,Pass,reports/newman-report.html
+TC16,05_Consumer_side_Smoke,{{coreMockUrl}}/policies/evaluate-access,POST,Access Gate calls Core Business mock,cardId/gateId/direction,200,decision in [ALLOW/DENY]; policyId and reason present,consumer-smoke,Pass,reports/newman-report.html
+TC17,06_Local_only_NonFunctional,/events,POST,Local response time threshold,GATE_SCAN gateId=GATE-02 cardId=RFID-2026-002,201,responseTime < 1000ms (asserted on env=local; skipped on mock),non-functional,Pass,reports/newman-report.html

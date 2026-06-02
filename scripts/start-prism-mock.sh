@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODE="${1:-iot}"
+MODE="${1:-gate}"
 
 case "${MODE}" in
-  iot)
-    npx prism mock contracts/iot-ingestion.openapi.yaml -p 4010 --host 0.0.0.0
+  gate)
+    npx prism mock contracts/access-gate.openapi.yaml -p 4010 --host 0.0.0.0
     ;;
-  vision)
-    npx prism mock contracts/ai-vision.openapi.yaml -p 4011 --host 0.0.0.0
+  core)
+    npx prism mock contracts/core-business.openapi.yaml -p 4011 --host 0.0.0.0
     ;;
   all)
-    npm run mock:iot &
-    IOT_PID=$!
-    npm run mock:vision &
-    VISION_PID=$!
-    trap 'kill ${IOT_PID} ${VISION_PID} 2>/dev/null || true' EXIT
+    npm run mock:gate &
+    GATE_PID=$!
+    npm run mock:core &
+    CORE_PID=$!
+    trap 'kill ${GATE_PID} ${CORE_PID} 2>/dev/null || true' EXIT
     wait
     ;;
   *)
-    echo "Usage: scripts/start-prism-mock.sh [iot|vision|all]"
+    echo "Usage: scripts/start-prism-mock.sh [gate|core|all]"
     exit 1
     ;;
 esac
