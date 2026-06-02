@@ -1,50 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="FIT4110 Lab03 - IoT Ingestion Contract Tests" tests="13" time="0.074">
-  <testsuite name="00_Health / GET /health - service is alive" id="9343d7f4-ce77-46b4-b79c-c935ba8b708c" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.025">
-    <testcase name="Status code is 200" time="0.025" classname="00HealthGetHealthServiceIsAlive"/>
-    <testcase name="Response has service status" time="0.025" classname="00HealthGetHealthServiceIsAlive"/>
+<testsuites name="FIT4110 Lab03 - Access Gate Contract Tests" tests="17" time="0.298">
+  <testsuite name="00_Health / GET /health - service is alive" id="ed5d8f09-d4b9-41d8-81ec-1529ee91396c" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.065">
+    <testcase name="Status code is 200" time="0.065" classname="00HealthGetHealthServiceIsAlive"/>
+    <testcase name="Response reports service status" time="0.065" classname="00HealthGetHealthServiceIsAlive"/>
   </testsuite>
-  <testsuite name="01_Functional / POST /readings - happy path creates reading" id="27fdf8c7-f723-4913-9ee4-46e70c06ea9b" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.005">
-    <testcase name="Status code is 201" time="0.005" classname="01FunctionalPostReadingsHappyPathCreatesReading"/>
-    <testcase name="Response has created reading fields" time="0.005" classname="01FunctionalPostReadingsHappyPathCreatesReading"/>
+  <testsuite name="01_Functional / GET /access/logs/recent - list recent access logs" id="e653d90d-187b-425b-95c7-b9b5aad22267" timestamp="2026-06-02T03:01:19.532Z" tests="3" failures="0" errors="0" time="0.051">
+    <testcase name="Status code is 200" time="0.051" classname="01FunctionalGetAccessLogsRecentListRecentAccessLogs"/>
+    <testcase name="Response is a paginated access-log page" time="0.051" classname="01FunctionalGetAccessLogsRecentListRecentAccessLogs"/>
+    <testcase name="Each access log has the contract fields" time="0.051" classname="01FunctionalGetAccessLogsRecentListRecentAccessLogs"/>
   </testsuite>
-  <testsuite name="01_Functional / GET /readings/latest - list latest readings" id="70eed342-ae9f-4e6a-b208-7069cef8d313" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.004">
-    <testcase name="Status code is 200" time="0.004" classname="01FunctionalGetReadingsLatestListLatestReadings"/>
-    <testcase name="Response contains items array" time="0.004" classname="01FunctionalGetReadingsLatestListLatestReadings"/>
+  <testsuite name="01_Functional / GET /cards/{cardId} - read card info" id="0e0d5569-4e9d-4269-8018-9057c65f2e9d" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.017">
+    <testcase name="Status code is 200" time="0.017" classname="01FunctionalGetCardsCardIdReadCardInfo"/>
+    <testcase name="Card info matches contract enums" time="0.017" classname="01FunctionalGetCardsCardIdReadCardInfo"/>
   </testsuite>
-  <testsuite name="02_Auth / GET /readings/latest - valid token is accepted" id="83ac03f6-6a7a-4537-8fc2-98b9f923bafd" timestamp="2026-06-01T14:09:55.906Z" tests="1" failures="0" errors="0" time="0.003">
-    <testcase name="Valid token request returns success" time="0.003" classname="02AuthGetReadingsLatestValidTokenIsAccepted"/>
+  <testsuite name="01_Functional / GET /gates/{gateId}/status - read gate status" id="4cd14759-5a37-46d7-a419-51f4d2e4502d" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="Status code is 200" time="0.013" classname="01FunctionalGetGatesGateIdStatusReadGateStatus"/>
+    <testcase name="Gate status has valid mode and online flag" time="0.013" classname="01FunctionalGetGatesGateIdStatusReadGateStatus"/>
   </testsuite>
-  <testsuite name="02_Auth / POST /readings - missing token is rejected on real service" id="2d30eaf7-4d80-40b0-b9e3-f40e1c89d57c" timestamp="2026-06-01T14:09:55.906Z" tests="1" failures="0" errors="0" time="0.004">
-    <testcase name="Skipped on mock: Prism does not enforce real auth without a service implementation" time="0.004" classname="02AuthPostReadingsMissingTokenIsRejectedOnRealService"/>
+  <testsuite name="01_Functional / POST /events - valid card-swipe event is accepted" id="2845c1ad-c473-48f6-bf8c-ecc6bb1558e4" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.018">
+    <testcase name="Status code is 201" time="0.018" classname="01FunctionalPostEventsValidCardSwipeEventIsAccepted"/>
+    <testcase name="Response returns an eventId" time="0.018" classname="01FunctionalPostEventsValidCardSwipeEventIsAccepted"/>
   </testsuite>
-  <testsuite name="02_Auth / POST /readings - invalid token is rejected on real service" id="bb7eefb7-75b6-461b-a4fc-0dc6def2ba1d" timestamp="2026-06-01T14:09:55.906Z" tests="1" failures="0" errors="0" time="0.003">
-    <testcase name="Skipped on mock: invalid token requires real auth middleware" time="0.003" classname="02AuthPostReadingsInvalidTokenIsRejectedOnRealService"/>
+  <testsuite name="02_Auth / GET /access/logs/recent - valid token is accepted" id="0c7eee14-c5aa-4778-9164-8485b3c80948" timestamp="2026-06-02T03:01:19.532Z" tests="1" failures="0" errors="0" time="0.013">
+    <testcase name="Valid token request returns success" time="0.013" classname="02AuthGetAccessLogsRecentValidTokenIsAccepted"/>
   </testsuite>
-  <testsuite name="03_Negative / POST /readings - missing required field returns validation error" id="32a31331-49cf-483d-b9ce-dea2fda45780" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.005">
-    <testcase name="Invalid payload returns client error" time="0.005" classname="03NegativePostReadingsMissingRequiredFieldReturnsValidationError"/>
-    <testcase name="Error response follows ProblemDetails shape" time="0.005" classname="03NegativePostReadingsMissingRequiredFieldReturnsValidationError"/>
+  <testsuite name="02_Auth / GET /access/logs/recent - missing token is rejected" id="02bf4d1f-aac2-4dca-b144-cbe329f75e47" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.019">
+    <testcase name="Missing token returns 401 or 403" time="0.019" classname="02AuthGetAccessLogsRecentMissingTokenIsRejected"/>
+    <testcase name="Error body follows Problem shape" time="0.019" classname="02AuthGetAccessLogsRecentMissingTokenIsRejected"/>
   </testsuite>
-  <testsuite name="03_Negative / POST /readings - wrong enum value returns validation error" id="157dce3a-fccd-4860-8ab6-ecb22230384a" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.004">
-    <testcase name="Wrong metric enum returns client error" time="0.004" classname="03NegativePostReadingsWrongEnumValueReturnsValidationError"/>
-    <testcase name="Error response has detail" time="0.004" classname="03NegativePostReadingsWrongEnumValueReturnsValidationError"/>
+  <testsuite name="02_Auth / POST /events - missing token is rejected" id="e234e880-7c80-417d-803c-5bf30aa5559b" timestamp="2026-06-02T03:01:19.532Z" tests="1" failures="0" errors="0" time="0.012">
+    <testcase name="Missing token returns 401 or 403" time="0.012" classname="02AuthPostEventsMissingTokenIsRejected"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / POST /readings - boundary value 80 is accepted" id="45270782-7310-4978-ae75-53b562cfed8b" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.004">
-    <testcase name="Boundary value at max returns success" time="0.004" classname="04BoundaryReliabilityPostReadingsBoundaryValue80IsAccepted"/>
-    <testcase name="Response confirms accepted reading" time="0.004" classname="04BoundaryReliabilityPostReadingsBoundaryValue80IsAccepted"/>
+  <testsuite name="02_Auth / GET /cards/{cardId} - invalid token is rejected on real service" id="fd2f0ad3-33ac-4eb8-a954-a889dce33c3d" timestamp="2026-06-02T03:01:19.532Z" tests="1" failures="0" errors="0" time="0.007">
+    <testcase name="Skipped on mock: Prism does not validate token value, only presence" time="0.007" classname="02AuthGetCardsCardIdInvalidTokenIsRejectedOnRealService"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / POST /readings - value 81 is rejected as out of range" id="82a67e50-6c92-4657-b221-92b23269428d" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.005">
-    <testcase name="Out-of-range value returns client error" time="0.005" classname="04BoundaryReliabilityPostReadingsValue81IsRejectedAsOutOfRange"/>
-    <testcase name="Boundary test checks response, not request body" time="0.005" classname="04BoundaryReliabilityPostReadingsValue81IsRejectedAsOutOfRange"/>
+  <testsuite name="03_Negative / GET /gates/{gateId}/status - invalid gateId format returns validation error" id="de7daf95-6d58-43bf-8d2f-8ec8eacf4138" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.005">
+    <testcase name="Invalid gateId returns client error" time="0.005" classname="03NegativeGetGatesGateIdStatusInvalidGateIdFormatReturnsValidationError"/>
+    <testcase name="Error response has title and status" time="0.005" classname="03NegativeGetGatesGateIdStatusInvalidGateIdFormatReturnsValidationError"/>
   </testsuite>
-  <testsuite name="04_Boundary_Reliability / GET /readings/latest - limit above max is rejected" id="bf00ee2f-33f6-4a08-929d-f8483144ae5c" timestamp="2026-06-01T14:09:55.906Z" tests="1" failures="0" errors="0" time="0.003">
-    <testcase name="Limit above max returns client error" time="0.003" classname="04BoundaryReliabilityGetReadingsLatestLimitAboveMaxIsRejected"/>
+  <testsuite name="03_Negative / POST /events - missing required field returns validation error" id="dc5f63f0-dddf-4bac-94e4-3348ceaa8cba" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.012">
+    <testcase name="Invalid payload returns client error" time="0.012" classname="03NegativePostEventsMissingRequiredFieldReturnsValidationError"/>
+    <testcase name="Error response follows Problem shape" time="0.012" classname="03NegativePostEventsMissingRequiredFieldReturnsValidationError"/>
   </testsuite>
-  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - Camera/Core can call AI Vision mock" id="7c2b5be9-cef7-49fb-aade-cf4d9f89dab5" timestamp="2026-06-01T14:09:55.906Z" tests="2" failures="0" errors="0" time="0.006">
-    <testcase name="Consumer receives success from provider mock" time="0.006" classname="05ConsumerSideSmokeConsumerSmokeCameraCoreCanCallAiVisionMock"/>
-    <testcase name="Consumer can read detection fields" time="0.006" classname="05ConsumerSideSmokeConsumerSmokeCameraCoreCanCallAiVisionMock"/>
+  <testsuite name="03_Negative / GET /cards/{cardId} - card not found returns 404" id="e723f7c7-1612-45aa-9c74-0ed5972b2ef3" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.014">
+    <testcase name="Unknown card returns 404" time="0.014" classname="03NegativeGetCardsCardIdCardNotFoundReturns404"/>
+    <testcase name="404 body follows Problem shape" time="0.014" classname="03NegativeGetCardsCardIdCardNotFoundReturns404"/>
   </testsuite>
-  <testsuite name="06_Local_only_NonFunctional / POST /readings - local response time threshold" id="911ac91b-bef5-416c-99e8-049819328e16" timestamp="2026-06-01T14:09:55.906Z" tests="1" failures="0" errors="0" time="0.003">
-    <testcase name="Skipped on mock: mock latency is not evidence of real service reliability" time="0.003" classname="06LocalOnlyNonFunctionalPostReadingsLocalResponseTimeThreshold"/>
+  <testsuite name="04_Boundary_Reliability / GET /access/logs/recent - limit at max (100) is accepted" id="0995b32a-d326-49cc-b97c-60579787d641" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.005">
+    <testcase name="Boundary limit=100 returns success" time="0.005" classname="04BoundaryReliabilityGetAccessLogsRecentLimitAtMax100IsAccepted"/>
+    <testcase name="Response is still a valid page" time="0.005" classname="04BoundaryReliabilityGetAccessLogsRecentLimitAtMax100IsAccepted"/>
+  </testsuite>
+  <testsuite name="04_Boundary_Reliability / GET /access/logs/recent - limit above max (101) is rejected" id="5b27c957-2d5b-4059-8c60-97c685d47e70" timestamp="2026-06-02T03:01:19.532Z" tests="1" failures="0" errors="0" time="0.004">
+    <testcase name="limit above max returns client error" time="0.004" classname="04BoundaryReliabilityGetAccessLogsRecentLimitAboveMax101IsRejected"/>
+  </testsuite>
+  <testsuite name="04_Boundary_Reliability / GET /access/logs/{logId} - status reflects allow/deny decision" id="0ac92773-e328-4ffe-b539-b7002cefd2d2" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.013">
+    <testcase name="Status code is 200" time="0.013" classname="04BoundaryReliabilityGetAccessLogsLogIdStatusReflectsAllowDenyDecision"/>
+    <testcase name="Decision is ALLOWED or DENIED" time="0.013" classname="04BoundaryReliabilityGetAccessLogsLogIdStatusReflectsAllowDenyDecision"/>
+  </testsuite>
+  <testsuite name="05_Consumer_side_Smoke / Consumer smoke - Access Gate calls Core Business mock (evaluate-access)" id="d7bf5af3-9cd1-490c-9752-d06dab515d48" timestamp="2026-06-02T03:01:19.532Z" tests="2" failures="0" errors="0" time="0.024">
+    <testcase name="Consumer receives success from provider mock" time="0.024" classname="05ConsumerSideSmokeConsumerSmokeAccessGateCallsCoreBusinessMockEvaluateAccess"/>
+    <testcase name="Consumer can read the policy decision fields" time="0.024" classname="05ConsumerSideSmokeConsumerSmokeAccessGateCallsCoreBusinessMockEvaluateAccess"/>
+  </testsuite>
+  <testsuite name="06_Local_only_NonFunctional / POST /events - local response time threshold" id="0e68c4d7-7075-468c-ba25-4186d84b1aff" timestamp="2026-06-02T03:01:19.532Z" tests="1" failures="0" errors="0" time="0.006">
+    <testcase name="Skipped on mock: mock latency is not evidence of real service reliability" time="0.006" classname="06LocalOnlyNonFunctionalPostEventsLocalResponseTimeThreshold"/>
   </testsuite>
 </testsuites>

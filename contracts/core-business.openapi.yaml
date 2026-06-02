@@ -1,0 +1,165 @@
+openapi: 3.1.0
+info:
+  title: Smart Campus — Core Business API (Consumer-side dependency mock)
+  version: 1.0.0
+  description: |
+    Mock contract tối giản của Core Business, dùng cho consumer-side smoke test của Access Gate.
+    Access Gate (consumer) gửi sự kiện quẹt thẻ tới Core Business (provider) để đánh giá chính sách allow/deny.
+    Đây KHÔNG phải contract đầy đủ của Core Business — chỉ đủ endpoint cho Access Gate gọi thử mock.
+  contact:
+    name: FIT4110 Teaching Team
+    email: fit4110@example.edu.vn
+servers:
+  - url: http://localhost:4011
+    description: Prism mock server (Core Business dependency)
+security:
+  - bearerAuth: []
+tags:
+  - name: health
+    description: Kiểm tra trạng thái service
+  - name: policies
+    description: Đánh giá chính sách truy cập
+paths:
+  /health:
+    get:
+      operationId: getCoreHealth
+      summary: Kiểm tra trạng thái Core Business
+      description: Endpoint kiểm tra Core Business còn hoạt động.
+      tags: [health]
+      security: []
+      responses:
+        '200':
+          description: Service đang hoạt động
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              example:
+                status: ok
+                service: core-business
+                time: '2026-05-26T08:00:00Z'
+
+  /policies/evaluate-access:
+    post:
+      operationId: evaluateAccessPolicy
+      summary: Đánh giá chính sách cho một sự kiện quẹt thẻ
+      description: |
+        Access Gate (consumer) gửi thông tin quẹt thẻ; Core Business trả quyết định ALLOW/DENY.
+      tags: [policies]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessEvaluationRequest'
+            example:
+              cardId: RFID-2026-001
+              gateId: GATE-01
+              direction: IN
+      responses:
+        '200':
+          description: Quyết định chính sách
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessDecision'
+              example:
+                decision: ALLOW
+                policyId: POL-ACCESS-001
+                reason: Thẻ hợp lệ, còn hạn, cổng đang mở
+        '400':
+          description: Payload sai định dạng
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://campus.local/errors/validation
+                title: Dữ liệu không hợp lệ
+                status: 400
+                detail: Thiếu cardId
+        '401':
+          description: Thiếu hoặc sai thông tin xác thực
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: https://campus.local/errors/unauthorized
+                title: Chưa xác thực
+                status: 401
+                detail: Thiếu Bearer token
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    HealthStatus:
+      type: object
+      additionalProperties: false
+      required: [status, service, time]
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: core-business
+        time:
+          type: string
+          format: date-time
+          example: '2026-05-26T08:00:00Z'
+    AccessEvaluationRequest:
+      type: object
+      additionalProperties: false
+      required: [cardId, gateId, direction]
+      properties:
+        cardId:
+          type: string
+          pattern: '^RFID-[0-9]{4}-[0-9]{3}$'
+          example: RFID-2026-001
+        gateId:
+          type: string
+          pattern: '^GATE-[0-9]{2}$'
+          example: GATE-01
+        direction:
+          type: string
+          enum: [IN, OUT]
+          example: IN
+    AccessDecision:
+      type: object
+      additionalProperties: false
+      required: [decision, policyId, reason]
+      properties:
+        decision:
+          type: string
+          enum: [ALLOW, DENY]
+          example: ALLOW
+        policyId:
+          type: string
+          example: POL-ACCESS-001
+        reason:
+          type: string
+          example: Thẻ hợp lệ, còn hạn, cổng đang mở
+    Problem:
+      type: object
+      additionalProperties: false
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          example: https://campus.local/errors/validation
+        title:
+          type: string
+          example: Dữ liệu không hợp lệ
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+          example: 400
+        detail:
+          type: string
+          example: Thiếu cardId
